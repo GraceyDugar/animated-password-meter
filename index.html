@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stretchy Cat Reset</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700&display=swap">
+<style>
+/* Layout: one centered card; a wide SVG stage on top holds the cat, the form sits below it. */
+:root{
+  --bg:#ECE8F6; --card:#FFFFFF; --fg:#241D36; --muted:#6D6584; --line:#E1DCEE;
+  --accent:#5B3A8E; --accent-ink:#FFFFFF; --field:#F6F3FB;
+  --bad:#D94C4C; --mid:#E0A030; --good:#2E9B6A;
+  --fur:#F2A54A; --fur-dark:#D97E1F; --fur-light:#FFD9A6; --ink:#2B1A0C; --blush:#F27A8A;
+  --stage:#F3EFFA;
+  --display:'Fredoka',system-ui,sans-serif; --body:'Nunito',system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+  --bg:#17122A; --card:#221B38; --fg:#F1ECFA; --muted:#A79CC2; --line:#352C50;
+  --accent:#B79CF2; --accent-ink:#1A1230; --field:#2B2345; --stage:#1C1630;
+  --fur:#F2A54A; --fur-dark:#C96F18; --fur-light:#FFD9A6; --ink:#1B1008; --blush:#F27A8A;
+  color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#17122A; --card:#221B38; --fg:#F1ECFA; --muted:#A79CC2; --line:#352C50;
+  --accent:#B79CF2; --accent-ink:#1A1230; --field:#2B2345; --stage:#1C1630;
+  --fur:#F2A54A; --fur-dark:#C96F18; --fur-light:#FFD9A6; --ink:#1B1008; --blush:#F27A8A;
+  color-scheme:dark }
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);
+  min-height:100%;display:flex;justify-content:center;
+  padding-block:28px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.card{width:100%;max-width:430px;background:var(--card);border-radius:24px;box-shadow:0 18px 50px rgba(36,29,54,.14);overflow:hidden;align-self:flex-start}
+.stage{background:var(--stage);padding:14px 10px 0;position:relative}
+.stage svg{display:block;width:100%;height:auto;overflow:visible}
+.svgwrap.grumpy{animation:twitch 1.6s infinite}
+.svgwrap.jump{animation:hop .7s cubic-bezier(.2,1.6,.5,1)}
+@keyframes twitch{0%,92%,100%{transform:translateX(0)}94%{transform:translateX(-2px)}96%{transform:translateX(2px)}98%{transform:translateX(-1px)}}
+@keyframes hop{0%{transform:translateY(0)}35%{transform:translateY(-22px) scaleY(1.08)}70%{transform:translateY(0) scaleY(.92)}100%{transform:translateY(0)}}
+.spark{opacity:0;transform-box:fill-box;transform-origin:center}
+.sparkling .spark{animation:twinkle 1.4s ease-in-out infinite}
+.sparkling .spark:nth-child(2){animation-delay:.35s}.sparkling .spark:nth-child(3){animation-delay:.7s}.sparkling .spark:nth-child(4){animation-delay:1.05s}
+@keyframes twinkle{0%,100%{opacity:0;transform:scale(.4) rotate(0)}50%{opacity:1;transform:scale(1) rotate(25deg)}}
+
+.quip{text-align:center;font-family:var(--display);font-weight:600;font-size:1.25rem;line-height:1.25;
+  padding:0 16px 14px;min-height:46px;text-wrap:balance}
+.quip span{display:inline-block;animation:pop .35s cubic-bezier(.2,1.4,.5,1)}
+@keyframes pop{from{opacity:0;transform:translateY(6px) scale(.92)}to{opacity:1;transform:none}}
+
+.form{padding:22px 24px 26px;display:grid;gap:16px}
+h1{font-family:var(--display);font-weight:700;font-size:1.55rem;margin:0;letter-spacing:-.01em}
+.sub{margin:4px 0 0;color:var(--muted);font-size:.93rem;line-height:1.45}
+label{display:grid;gap:6px;font-weight:700;font-size:.82rem;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.fieldwrap{position:relative}
+input{width:100%;font:inherit;font-size:1rem;padding:13px 48px 13px 14px;border-radius:12px;border:1.5px solid var(--line);background:var(--field);color:var(--fg);outline:none;transition:border-color .15s,box-shadow .15s}
+input:focus{border-color:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 22%,transparent)}
+.eye{position:absolute;right:6px;top:50%;transform:translateY(-50%);border:0;background:none;color:var(--muted);font:inherit;font-size:.8rem;font-weight:700;padding:8px;border-radius:8px;cursor:pointer}
+.eye:focus-visible{outline:2px solid var(--accent)}
+.dots{display:flex;gap:7px;align-items:center;margin-top:2px}
+.dot{flex:1;height:7px;border-radius:99px;background:var(--line);transition:background .25s,transform .25s}
+.dot.on.bad{background:var(--bad)}.dot.on.mid{background:var(--mid)}.dot.on.good{background:var(--good)}
+.dot.on{transform:scaleY(1.3)}
+.dotlabel{font-size:.78rem;color:var(--muted);min-width:64px;text-align:right;font-weight:700}
+.hint{font-size:.82rem;color:var(--muted);min-height:1.2em;text-transform:none;letter-spacing:0;font-weight:600}
+.hint.err{color:var(--bad)}
+button.reset{font-family:var(--display);font-weight:600;font-size:1.05rem;padding:14px;border-radius:14px;border:0;background:var(--accent);color:var(--accent-ink);cursor:pointer;transition:transform .12s,opacity .2s}
+button.reset:disabled{opacity:.42;cursor:not-allowed}
+button.reset:not(:disabled):hover{transform:translateY(-1px)}
+button.reset:not(:disabled):active{transform:scale(.98)}
+button.reset:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+.toast{text-align:center;font-weight:700;color:var(--good);font-size:.95rem}
+@media (prefers-reduced-motion:reduce){.svgwrap,.spark,.quip span{animation:none!important}}
+</style>
+
+<div class="card">
+  <div class="stage">
+    <div class="svgwrap" id="svgwrap">
+    <svg viewBox="0 0 440 215" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <defs><clipPath id="bodyClip"><rect id="clipRect" rx="40"/></clipPath></defs>
+      <!-- ground shadow -->
+      <ellipse id="shadow" cy="188" fill="var(--ink)" opacity=".12"/>
+      <!-- tail -->
+      <path id="tail" fill="none" stroke="var(--fur)" stroke-width="13" stroke-linecap="round"/>
+      <path id="tailTip" fill="none" stroke="var(--fur-dark)" stroke-width="13" stroke-linecap="round"/>
+      <!-- legs -->
+      <g fill="var(--fur)"><rect id="legBL" width="18" height="34" rx="9"/><rect id="legBR" width="18" height="34" rx="9"/><rect id="legFL" width="18" height="34" rx="9"/><rect id="legFR" width="18" height="34" rx="9"/></g>
+      <!-- body -->
+      <rect id="body" fill="var(--fur)"/>
+      <g clip-path="url(#bodyClip)" stroke="var(--fur-dark)" stroke-width="9" fill="none" stroke-linecap="round">
+        <path id="s1"/><path id="s2"/><path id="s3"/><path id="s4"/>
+      </g>
+      <ellipse id="belly" fill="var(--fur-light)" opacity=".85"/>
+      <!-- head -->
+      <g id="ears" fill="var(--fur)">
+        <g id="earL"><path id="earLp"/><path id="earLi" fill="var(--blush)" opacity=".55"/></g>
+        <g id="earR"><path id="earRp"/><path id="earRi" fill="var(--blush)" opacity=".55"/></g>
+      </g>
+      <circle id="head" r="36" fill="var(--fur)"/>
+      <path id="headStripe" fill="none" stroke="var(--fur-dark)" stroke-width="6" stroke-linecap="round"/>
+      <circle id="blushL" r="7" fill="var(--blush)" opacity="0"/><circle id="blushR" r="7" fill="var(--blush)" opacity="0"/>
+      <g id="eyesOpen">
+        <ellipse id="eyeL" fill="#fff"/><ellipse id="eyeR" fill="#fff"/>
+        <ellipse id="pupL" fill="var(--ink)"/><ellipse id="pupR" fill="var(--ink)"/>
+        <circle id="glintL" r="2.2" fill="#fff"/><circle id="glintR" r="2.2" fill="#fff"/>
+        <path id="lidL" fill="var(--fur)"/><path id="lidR" fill="var(--fur)"/>
+      </g>
+      <g id="eyesClosed" fill="none" stroke="var(--ink)" stroke-width="3.5" stroke-linecap="round" opacity="0"><path id="closedL"/><path id="closedR"/></g>
+      <g id="brows" fill="none" stroke="var(--ink)" stroke-width="3.5" stroke-linecap="round"><path id="browL"/><path id="browR"/></g>
+      <path id="nose" fill="var(--blush)"/>
+      <path id="mouth" fill="none" stroke="var(--ink)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+      <path id="tongue" fill="var(--blush)" opacity="0"/>
+      <g id="whiskers" stroke="var(--ink)" stroke-width="2" stroke-linecap="round" opacity=".7"><path id="w1"/><path id="w2"/><path id="w3"/><path id="w4"/></g>
+      <g id="sparkles" fill="var(--mid)">
+        <path class="spark" d="M70 40l4 10 10 4-10 4-4 10-4-10-10-4 10-4z"/>
+        <path class="spark" d="M390 50l3 8 8 3-8 3-3 8-3-8-8-3 8-3z"/>
+        <path class="spark" d="M340 25l3 7 7 3-7 3-3 7-3-7-7-3 7-3z"/>
+        <path class="spark" d="M120 22l2.5 6 6 2.5-6 2.5-2.5 6-2.5-6-6-2.5 6-2.5z"/>
+      </g>
+    </svg>
+    </div>
+    <div class="quip" id="quip" aria-live="polite"><span>Type something, whiskers.</span></div>
+  </div>
+
+  <form class="form" id="form" novalidate>
+    <div>
+      <h1>Reset your password</h1>
+      <p class="sub">Pick something the cat approves of. It has standards.</p>
+    </div>
+    <label for="pw">New password
+      <div class="fieldwrap">
+        <input id="pw" type="password" autocomplete="new-password" placeholder="At least 8 characters" spellcheck="false">
+        <button type="button" class="eye" id="togglePw" aria-label="Show password">Show</button>
+      </div>
+      <div class="dots" aria-hidden="true">
+        <div class="dot" id="d1"></div><div class="dot" id="d2"></div><div class="dot" id="d3"></div><div class="dot" id="d4"></div><div class="dot" id="d5"></div>
+        <span class="dotlabel" id="dotlabel">Empty</span>
+      </div>
+    </label>
+    <label for="pw2">Confirm password
+      <div class="fieldwrap"><input id="pw2" type="password" autocomplete="new-password" placeholder="Same thing again" spellcheck="false"></div>
+      <div class="hint" id="hint"></div>
+    </label>
+    <button class="reset" type="submit" id="submit" disabled>Reset password</button>
+    <div class="toast" id="toast" hidden>Password reset. The cat has gone back to sleep.</div>
+  </form>
+</div>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const LEVELS = [
+    {label:'Empty',  L:104, tail:0,   lines:['Type something, whiskers.','I am waiting. Patiently. For once.']},
+    {label:'Weak',   L:86,  tail:0,   lines:['Too short, fur-ball.','My litter box has better security.','Is that a password or a sneeze?']},
+    {label:'Meh',    L:150, tail:.3,  lines:['Hiss-terically weak.','I have seen stronger passwords on a scratching post.']},
+    {label:'Okay',   L:222, tail:.5,  lines:['Purr-haps add a number?','Getting longer. Still not impressed.','Fur real, mix it up a bit.']},
+    {label:'Good',   L:292, tail:.8,  lines:['Not bad, you clawver human.','Almost worthy of my nap time.']},
+    {label:'Strong', L:362, tail:1,   lines:['Meow-nificent at last.','Fine. You may pet the password.','Purrfection. I am long now.']},
+  ];
+  const DOTCLASS = ['', 'bad','bad','mid','good','good'];
+
+  // ---- strength ----
+  function levelFor(p){
+    if(!p) return 0;
+    if(p.length < 6) return 1;
+    let s = (p.length>=8) + (p.length>=12) + /[A-Z]/.test(p) + /\d/.test(p) + /[^A-Za-z0-9]/.test(p);
+    return Math.min(5, 1 + s);
+  }
+
+  // ---- spring state ----
+  let level = 0, L = LEVELS[0].L, vL = 0, tailT = 0, vT = 0, blink = 1, blinkTimer = 0;
+  let lastLine = '';
+
+  function setLevel(n){
+    if(n === level) return;
+    level = n;
+    const pool = LEVELS[n].lines.filter(l => l !== lastLine);
+    const line = pool[Math.floor(Math.random()*pool.length)];
+    lastLine = line;
+    $('quip').innerHTML = '<span>' + line + '</span>';
+    $('dotlabel').textContent = LEVELS[n].label;
+    for(let i=1;i<=5;i++){ const d=$('d'+i); d.className = 'dot' + (i<=n ? ' on '+DOTCLASS[n] : ''); }
+    $('svgwrap').classList.toggle('grumpy', n===1);
+    $('sparkles').classList.toggle('sparkling', n===5);
+    vL += (n===1 ? -6 : 4); // a little kick so the change feels physical
+  }
+
+  // ---- drawing helpers ----
+  const set = (id, attrs) => { const el=$(id); for(const k in attrs) el.setAttribute(k, attrs[k]); };
+  const lerp = (a,b,t)=>a+(b-a)*t;
+  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+
+  function draw(){
+    const cx = 220, ground = 172;
+    const stretchV = clamp(vL*0.012, -0.35, 0.35);
+    let H = 74 * Math.pow(106/L, 0.36) * (1 - stretchV);   // squash & stretch
+    H = clamp(H, 38, 96);
+    const bx = cx - L/2, by = ground - H;
+    set('body',{x:bx,y:by,width:L,height:H,rx:H/2});
+    set('clipRect',{x:bx,y:by,width:L,height:H,rx:H/2});
+    set('belly',{cx:cx+L*0.12, cy:ground-H*0.3, rx:L*0.28, ry:H*0.26});
+    set('shadow',{cx:cx+6, rx:L/2+30, ry:9});
+
+    // stripes
+    ['s1','s2','s3','s4'].forEach((id,i)=>{
+      const x = bx + L*(0.34 + 0.17*i);
+      set(id,{d:`M${x} ${by-2} q ${-H*0.18} ${H*0.5} 0 ${H+4}`});
+    });
+
+    // legs: back pair hugs the rump, front pair tucked under the head
+    const legY = ground-26;
+    set('legBL',{x:bx+L-34, y:legY}); set('legBR',{x:bx+L-56, y:legY});
+    set('legFL',{x:bx+28, y:legY});   set('legFR',{x:bx+8,  y:legY});
+
+    // head
+    const hx = bx + 36, hy = by + 4 - (level>=4 ? 6 : 0);
+    set('head',{cx:hx,cy:hy});
+    set('headStripe',{d:`M${hx-14} ${hy-24} q 14 -8 28 0 M${hx-6} ${hy-30} q 6 -4 12 0`});
+    set('blushL',{cx:hx-24,cy:hy+10,opacity: level>=4 ? .7 : 0});
+    set('blushR',{cx:hx+24,cy:hy+10,opacity: level>=4 ? .7 : 0});
+
+    // ears: flattened sideways when grumpy, perked when happy
+    const earRot = level===1 ? 58 : level===0 ? 18 : level===2 ? 30 : level===3 ? 10 : 0;
+    const earDrop = level===1 ? 8 : 0;
+    const lx = hx-16, rx = hx+16, baseY = hy-26+earDrop;
+    set('earLp',{d:`M${lx-14} ${baseY+8} L${lx-6} ${baseY-28} L${lx+14} ${baseY+2} Z`});
+    set('earLi',{d:`M${lx-7} ${baseY+5} L${lx-4} ${baseY-16} L${lx+8} ${baseY+2} Z`});
+    set('earRp',{d:`M${rx+14} ${baseY+8} L${rx+6} ${baseY-28} L${rx-14} ${baseY+2} Z`});
+    set('earRi',{d:`M${rx+7} ${baseY+5} L${rx+4} ${baseY-16} L${rx-8} ${baseY+2} Z`});
+    set('earL',{transform:`rotate(${-earRot} ${lx} ${baseY+6})`});
+    set('earR',{transform:`rotate(${earRot} ${rx} ${baseY+6})`});
+
+    // eyes
+    const exL = hx-13, exR = hx+13, ey = hy-2;
+    const closed = level===5;
+    $('eyesOpen').setAttribute('opacity', closed ? 0 : 1);
+    $('eyesClosed').setAttribute('opacity', closed ? 1 : 0);
+    if(closed){
+      set('closedL',{d:`M${exL-9} ${ey+2} q 9 -11 18 0`});
+      set('closedR',{d:`M${exR-9} ${ey+2} q 9 -11 18 0`});
+    } else {
+      const open = [1, .55, .75, .85, 1][level] * blink;
+      const pupW = [3.2, 2.2, 2.8, 3.5, 4][level];
+      const pupX = [0, -2, 3, 2, 0][level];
+      set('eyeL',{cx:exL,cy:ey,rx:9,ry:10*open}); set('eyeR',{cx:exR,cy:ey,rx:9,ry:10*open});
+      set('pupL',{cx:exL+pupX,cy:ey+1,rx:pupW,ry:8*open}); set('pupR',{cx:exR+pupX,cy:ey+1,rx:pupW,ry:8*open});
+      set('glintL',{cx:exL+pupX+1.5,cy:ey-2.5*open}); set('glintR',{cx:exR+pupX+1.5,cy:ey-2.5*open});
+      // heavy lids for the grumpy and the smug
+      const lid = [0, .45, .25, .15, .35][level];
+      const lidH = 20*open*lid, slant = level===4 ? 4 : 0;
+      set('lidL',{d:`M${exL-11} ${ey-11} h22 v${lidH+slant} q -11 -4 -22 0 z`});
+      set('lidR',{d:`M${exR-11} ${ey-11} h22 v${lidH} q -11 -4 -22 ${slant} z`});
+    }
+    // brows
+    const browY = ey-15;
+    const brow = [
+      [`M${exL-8} ${browY} l 14 1`, `M${exR+8} ${browY} l -14 1`],
+      [`M${exL-9} ${browY-2} l 16 7`, `M${exR+9} ${browY-2} l -16 7`],
+      [`M${exL-8} ${browY} l 14 3`, `M${exR+8} ${browY-3} l -14 1`],
+      [`M${exL-8} ${browY-1} l 14 1`, `M${exR+8} ${browY-5} l -14 3`],
+      [`M${exL-8} ${browY-3} l 14 2`, `M${exR+8} ${browY-8} l -14 4`],
+      [`M${exL-8} ${browY-6} q 7 -5 14 -2`, `M${exR+8} ${browY-6} q -7 -5 -14 -2`],
+    ][level];
+    set('browL',{d:brow[0]}); set('browR',{d:brow[1]});
+
+    // nose + mouth
+    const ny = hy+8;
+    set('nose',{d:`M${hx-4} ${ny} h8 l-4 5 z`});
+    const mouth = [
+      `M${hx-7} ${ny+8} q 3.5 4 7 0 q 3.5 4 7 0`,
+      `M${hx-9} ${ny+13} q 9 -8 18 0`,
+      `M${hx-7} ${ny+10} l 14 0`,
+      `M${hx-6} ${ny+9} q 7 5 13 -2`,
+      `M${hx-8} ${ny+8} q 9 9 18 -3`,
+      `M${hx-11} ${ny+7} q 11 14 22 0`,
+    ][level];
+    set('mouth',{d:mouth});
+    set('tongue',{d:`M${hx-4} ${ny+13} q 4 7 8 0 z`, opacity: level===5 ? 1 : 0});
+    // whiskers droop when grumpy, flare when proud
+    const wd = [0, 5, 2, 0, -2, -4][level];
+    set('w1',{d:`M${hx-20} ${ny+2} l -22 ${wd-3}`}); set('w2',{d:`M${hx-20} ${ny+8} l -22 ${wd+3}`});
+    set('w3',{d:`M${hx+20} ${ny+2} l 22 ${wd-3}`});  set('w4',{d:`M${hx+20} ${ny+8} l 22 ${wd+3}`});
+
+    // tail: tucked when ashamed, a tall curl when smug
+    const sx = bx+L-6, sy = by+H*0.35;
+    const ex = lerp(sx+16, sx+10, tailT), ey2 = lerp(sy+26, sy-66, tailT);
+    const c1x = lerp(sx+26, sx+52, tailT), c1y = lerp(sy+4, sy-54, tailT);
+    const wag = Math.sin(performance.now()/260) * (level>=4 ? 6 : 2);
+    set('tail',{d:`M${sx} ${sy} Q ${c1x+wag} ${c1y} ${ex+wag} ${ey2}`});
+    const tx = ex+wag, ty = ey2;
+    set('tailTip',{d:`M${tx+(tailT>.5? -2:3)} ${ty+(tailT>.5?12:-6)} L${tx} ${ty}`});
+  }
+
+  function tick(){
+    const target = LEVELS[level].L;
+    vL += (target - L) * 0.05;  vL *= 0.80;  L += vL;           // springy stretch
+    vT += (LEVELS[level].tail - tailT) * 0.08; vT *= 0.82; tailT += vT;
+    blinkTimer--;
+    if(blinkTimer < -(220 + Math.random()*200)){ blink = 0.05; blinkTimer = 7; }
+    if(blinkTimer <= 0 && blink < 1) blink = Math.min(1, blink + 0.3);
+    draw();
+    requestAnimationFrame(tick);
+  }
+  draw(); requestAnimationFrame(tick);
+
+  // ---- form wiring ----
+  const pw = $('pw'), pw2 = $('pw2'), submit = $('submit'), hint = $('hint');
+  function refresh(){
+    const n = levelFor(pw.value);
+    setLevel(n);
+    const match = pw2.value.length>0 && pw.value === pw2.value;
+    hint.className = 'hint' + (pw2.value && !match ? ' err' : '');
+    hint.textContent = !pw2.value ? '' : match ? 'They match. The cat nods.' : "These don't match. The cat has noticed.";
+    submit.disabled = !(n>=4 && match);
+    $('toast').hidden = true;
+  }
+  pw.addEventListener('input', refresh); pw2.addEventListener('input', refresh);
+  $('togglePw').addEventListener('click', ()=>{
+    const show = pw.type === 'password';
+    pw.type = pw2.type = show ? 'text' : 'password';
+    $('togglePw').textContent = show ? 'Hide' : 'Show';
+    $('togglePw').setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+  });
+  $('form').addEventListener('submit', e=>{
+    e.preventDefault();
+    if(submit.disabled) return;
+    const w = $('svgwrap'); w.classList.remove('jump'); void w.offsetWidth; w.classList.add('jump');
+    vL += 14;
+    $('toast').hidden = false;
+  });
+})();
+</script>
+
+</body>
+</html>
